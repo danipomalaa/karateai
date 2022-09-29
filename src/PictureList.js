@@ -154,9 +154,9 @@ export default function PictureList(props) {
         <div style={{display:"inline-block", margin:2}}>
             <p>Take : {props.index+1}</p>
             <TextField value={props.label} onChange={props.change} placeholder="Masukan Nama Label" />
-            <div style={{position:'relative',width:200, height:190}}>
-                <img src={props.data.img} ref={imgRef} style={{position:'absolute', width:200, height:190, zIndex:10}} />
-                <canvas ref={canvasScreenShootRef} style={{position:'absolute', width:200, height:190, zIndex:10}} />
+            <div style={{position:'relative',width:200, height:130}}>
+                <img src={props.data.img} ref={imgRef} style={{position:'absolute', width:200, height:130, zIndex:10}} />
+                <canvas ref={canvasScreenShootRef} style={{position:'absolute', width:200, height:130, zIndex:10}} />
             </div>
             <p>Score Pose Detection : {props.data.pose && props.data.pose.length>0 ? Math.floor((props.data.pose[0].score)*100): "-"}</p>
             <p>Siku Kiri : {Math.round(sudutSikuKiri)}</p>
@@ -165,6 +165,7 @@ export default function PictureList(props) {
                 poseDetect(props.data.pose)
                 runCalculateAngle()
             }} >Pose Detect</Button>
+            <Button variant="contained" color="secondary" onClick={props.deletedata} >Hapus</Button>
         </div>
     )
 }

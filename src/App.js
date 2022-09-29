@@ -218,6 +218,13 @@ function App() {
     setTakeList(changeData)
   }
 
+  const [playStatus, setPlayStatus] = useState(null)
+
+  const deletedata = (id)=>{
+    const changeData = takeList.filter(x=>x.id !== id)
+    setTakeList(changeData)
+  }
+
 
   return (
     <div>
@@ -278,19 +285,25 @@ function App() {
               </div>
               <p>Score Pose Detection : {dataPose && dataPose.length>0 ? JSON.stringify(dataPose[0].score): "-"}</p>
               <p>Siku Kiri : {Math.round(angleSikuKiri)} &nbsp;&nbsp; Siku Kanan : {Math.round(angleSikuKanan)}</p>
-              <Button variant="contained" color="primary" onClick={()=>{
-                const video = webcamRef.current;
-                video.playbackRate = 0.5
-                runPose()
-                video.play()
-              }}>Play</Button>
-              <Button variant="contained" color="primary" onClick={()=>{
-                const video = webcamRef.current;
-                // runPose()
-                video.pause()
-              }}>Pause</Button>
+              {
+                !playStatus ? 
+                <Button variant="contained" color="primary" onClick={()=>{
+                  const video = webcamRef.current;
+                  video.playbackRate = 0.5
+                  runPose()
+                  video.play()
+                  setPlayStatus(true)
+                }}>Play</Button>
+                :
+                <Button variant="contained" color="primary" onClick={()=>{
+                  const video = webcamRef.current;
+                  // runPose()
+                  video.pause()
+                  setPlayStatus(false)
+                }}>Pause</Button>
+              }
 
-              <Button variant="contained" color="primary" onClick={()=>{
+              <Button variant="contained" color="primary" style={{marginLeft:5, marginRight:5}} onClick={()=>{
                 // const imageSrc = webcamRef.current.getScreenshot();
                 // console.log('imagesrc', imageSrc)
 
@@ -337,7 +350,7 @@ function App() {
               }}>Take Screenshot</Button>
 
 
-              <Button variant="contained" color="secondary" onClick={()=>{
+              <Button variant="contained" color="secondary" style={{marginRight:5}} onClick={()=>{
                 downloadFile({
                   data: JSON.stringify(takeList),
                   fileName: 'dataset.json',
@@ -357,7 +370,7 @@ function App() {
           {/* <img src={imageScreenShoot} style={{position:'absolute', width:200, height:190, zIndex:10}} /> */}
             {
               takeList.map((itemTake,index)=>{
-                return <PictureList change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
+                return <PictureList deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
                   // <div style={{display:"inline-block", margin:2}}>
                   //   <p>Take : {index+1}</p>
                   //   <div style={{position:'relative',width:200, height:190}}>
