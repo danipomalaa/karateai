@@ -251,8 +251,7 @@ function App() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={12} md={12}>
             <center>
-              <Typography>Video</Typography>
-              <br/>
+              <Typography>Pilih Video Source : </Typography>
               <Select value={chooseVideo} onChange={e=>setChooseVideo(e.target.value)}>
                 <MenuItem value="1">Video Kata 1 - Front</MenuItem>
                 <MenuItem value="2">Video Kata 1 - Side</MenuItem>
