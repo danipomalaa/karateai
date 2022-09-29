@@ -12,6 +12,7 @@ import { Container, Grid, Table, TableBody, TableHead, TableRow, TableCell, Typo
 import PictureList from './PictureList';
 import videokata from './video/kata1.mp4'
 import {downloadFile} from './utils/downloadFile'
+import { CSVLink } from "react-csv"
 
 function App() {
 
@@ -130,7 +131,7 @@ function App() {
   function drawKeypoint(keypoint, ctx) {
     // If score is null, just show the keypoint.
     const score = keypoint.score != null ? keypoint.score : 1;
-    const scoreThreshold = 0.6;
+    const scoreThreshold = 0.4;
     // const ctx = canvasRef.current.getContext("2d")
     if (score >= scoreThreshold) {
       const circle = new Path2D();
@@ -215,15 +216,28 @@ function App() {
         return item
       }
     })
+    const changeDataExport = excelExport.map(item=>{
+      if(id === item.id){
+        return {...item, label: e.target.value}
+      }
+      else{
+        return item
+      }
+    })
     setTakeList(changeData)
+    setExcelExport(changeDataExport)
   }
 
   const [playStatus, setPlayStatus] = useState(null)
 
   const deletedata = (id)=>{
     const changeData = takeList.filter(x=>x.id !== id)
+    const changeDataExport = excelExport.filter(x=>x.id !== id)
     setTakeList(changeData)
+    setExcelExport(changeDataExport)
   }
+
+  const [excelExport, setExcelExport] = useState([])
 
 
   return (
@@ -344,6 +358,17 @@ function App() {
 
                 let dataTake = {id: makeid(10), img: dataURI, sudutSikuKiri, sudutSikuKanan, pose : _dataPose}
                 let dataConcat = [...takeList, dataTake]
+
+                let poseField = {}
+                _dataPose[0].keypoints.forEach(itemkey=>{
+                  poseField[itemkey.name+"_x"] = itemkey.x.toFixed(0)
+                  poseField[itemkey.name+"_y"] = itemkey.y.toFixed(0)
+                  poseField[itemkey.name+"_z"] = itemkey.z.toFixed(0)
+                  poseField[itemkey.name+"_score"] = (itemkey.score*100).toFixed(2)  
+                })
+                let dataItem = Object.assign({}, {id:dataTake.id,label:""},poseField)
+                setExcelExport([...excelExport, dataItem])
+
                 setTakeList(dataConcat)
                 
                 
@@ -359,7 +384,12 @@ function App() {
               }}>
                 Export to JSON
               </Button>
-              <Button variant="contained" color="secondary" onClick={()=>{setImageScreenShoot("");setTakeList([])}}>Reset</Button>
+              <CSVLink data={excelExport} filename={`karatepose.csv`} separator=";">
+                <Button variant="contained" color="success"style={{marginRight:5}}>
+                    Export to csv
+                </Button>
+              </CSVLink>
+              <Button variant="contained" color="secondary" onClick={()=>{setImageScreenShoot("");setTakeList([]); setExcelExport([])}}>Reset</Button>
                   
             </center>
             
