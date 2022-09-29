@@ -8,9 +8,12 @@ import { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs-core';
 // Register WebGL backend.
 import '@tensorflow/tfjs-backend-webgl';
-import { Container, Grid, Table, TableBody, TableHead, TableRow, TableCell, Typography, Button } from '@mui/material';
+import { Container, Grid, Table, TableBody, TableHead, TableRow, TableCell, Typography, Button, Select, MenuItem } from '@mui/material';
 import PictureList from './PictureList';
-import videokata from './video/kata1.mp4'
+import videokata1 from './video/kata1.mp4'
+import videokata1side from './video/kata1side.mp4'
+import videokata2 from './video/kata2.mp4'
+import videokata2side from './video/kata2side.mp4'
 import {downloadFile} from './utils/downloadFile'
 import { CSVLink } from "react-csv"
 
@@ -238,6 +241,7 @@ function App() {
   }
 
   const [excelExport, setExcelExport] = useState([])
+  const [chooseVideo, setChooseVideo] = useState("1")
 
 
   return (
@@ -248,10 +252,22 @@ function App() {
           <Grid item xs={12} sm={12} md={12}>
             <center>
               <Typography>Video</Typography>
+              <br/>
+              <Select value={chooseVideo} onChange={e=>setChooseVideo(e.target.value)}>
+                <MenuItem value="1">Video Kata 1 - Front</MenuItem>
+                <MenuItem value="2">Video Kata 1 - Side</MenuItem>
+                <MenuItem value="3">Video Kata 2 - Front</MenuItem>
+                <MenuItem value="4">Video Kata 2 - Side</MenuItem>
+              </Select>
               <div style={{position:"relative", border:"1px solid #000", width:1024, height:580, textAlign:'center'}}>
                 <video ref={webcamRef} 
                   // src="https://drive.google.com/file/d/1EOq5XhGlA3UCc4aPjIslZW7WmfzJOULi/preview?pli=1" 
-                  src={videokata}
+                  src={
+                    chooseVideo === "1" ? videokata1 :
+                    chooseVideo === "2" ? videokata1side :
+                    chooseVideo === "3" ? videokata2 :
+                    chooseVideo === "4" ? videokata2side :
+                    videokata1}
                   screenshotFormat="image/jpeg"
                   style={{
                     // border:"1px solid #000",
