@@ -57,7 +57,7 @@ function App() {
         }
       }
       
-    },1)
+    },10)
   }
 
   // useEffect(()=>{
