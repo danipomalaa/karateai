@@ -64,20 +64,20 @@ function App() {
     },10)
   }
 
-  // useEffect(()=>{
-  //   runPose()
-  // },[])
+  useEffect(()=>{
+    runPose()
+  },[])
 
   const detectPose = async (detector)=>{
-    if(typeof webcamRef.current !== "undefined" &&
-    webcamRef.current !== null &&
-    webcamRef.current.readyState === 4){
-      const video = webcamRef.current
-      const videoWidth = webcamRef.current.videoWidth
-      const videoHeight = webcamRef.current.videoHeight
+    if(typeof webcamRef.current.video !== "undefined" &&
+    webcamRef.current.video !== null &&
+    webcamRef.current.video.readyState === 4){
+      const video = webcamRef.current.video
+      const videoWidth = webcamRef.current.video.videoWidth
+      const videoHeight = webcamRef.current.video.videoHeight
 
-      webcamRef.current.width = videoWidth
-      webcamRef.current.height= videoHeight
+      webcamRef.current.video.width = videoWidth
+      webcamRef.current.video.height= videoHeight
 
       canvasRef.current.width = videoWidth
       canvasRef.current.height = videoHeight
@@ -251,45 +251,19 @@ function App() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={12} md={12}>
             <center>
-              <Typography>Pilih Video Source : </Typography>
-              <Select value={chooseVideo} onChange={e=>setChooseVideo(e.target.value)}>
-                <MenuItem value="1">Video Kata 1 - Front</MenuItem>
-                <MenuItem value="2">Video Kata 1 - Side</MenuItem>
-                <MenuItem value="3">Video Kata 2 - Front</MenuItem>
-                <MenuItem value="4">Video Kata 2 - Side</MenuItem>
-              </Select>
+              <Typography>Live Camera</Typography>
               <div style={{position:"relative", border:"1px solid #000", width:1024, height:580, textAlign:'center'}}>
-                <video ref={webcamRef} 
-                  // src="https://drive.google.com/file/d/1EOq5XhGlA3UCc4aPjIslZW7WmfzJOULi/preview?pli=1" 
-                  src={
-                    chooseVideo === "1" ? videokata1 :
-                    chooseVideo === "2" ? videokata1side :
-                    chooseVideo === "3" ? videokata2 :
-                    chooseVideo === "4" ? videokata2side :
-                    videokata1}
-                  screenshotFormat="image/jpeg"
-                  style={{
-                    // border:"1px solid #000",
-                    position:'absolute',
-                    width:1024, height:580,
-                    top:0, left:0,
-                    // marginLeft:'auto',
-                    // marginRight:'auto',
-                    zIndex:9,
-                    textAlign:'center'
-                  }}
-                />
-                {/* <Webcam ref={webcamRef} screenshotFormat="image/jpeg" style={{
+                
+                <Webcam ref={webcamRef} screenshotFormat="image/jpeg" style={{
                   position:'absolute',
-                  width:540,
-                  // width:'90%',
-                  height:480,
+                  width:1024, height:580,
+                  top:0, left:0,
                   // marginLeft:'auto',
                   // marginRight:'auto',
                   zIndex:9,
                   textAlign:'center'
                 }}
-                /> */}
+                />
                 <canvas ref={canvasRef} style={{
                   position:'absolute',
                   width:1024, height:580,
@@ -314,29 +288,12 @@ function App() {
               </div>
               <p>Score Pose Detection : {dataPose && dataPose.length>0 ? JSON.stringify(dataPose[0].score): "-"}</p>
               <p>Siku Kiri : {Math.round(angleSikuKiri)} &nbsp;&nbsp; Siku Kanan : {Math.round(angleSikuKanan)}</p>
-              {
-                !playStatus ? 
-                <Button variant="contained" color="primary" onClick={()=>{
-                  const video = webcamRef.current;
-                  video.playbackRate = 0.5
-                  runPose()
-                  video.play()
-                  setPlayStatus(true)
-                }}>Play</Button>
-                :
-                <Button variant="contained" color="primary" onClick={()=>{
-                  const video = webcamRef.current;
-                  // runPose()
-                  video.pause()
-                  setPlayStatus(false)
-                }}>Pause</Button>
-              }
-
+              
               <Button variant="contained" color="primary" style={{marginLeft:5, marginRight:5}} onClick={()=>{
-                // const imageSrc = webcamRef.current.getScreenshot();
+                // const imageSrc = webcamRef.current.video.getScreenshot();
                 // console.log('imagesrc', imageSrc)
 
-                const video = webcamRef.current
+                const video = webcamRef.current.video
                 const videoWidth = video.videoWidth
                 const videoHeight = video.videoHeight
 
@@ -408,29 +365,7 @@ function App() {
                   
             </center>
             
-          </Grid>
-        </Grid>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={12} md={12}>
-          {/* <img src={imageScreenShoot} style={{position:'absolute', width:200, height:190, zIndex:10}} /> */}
-            {
-              takeList.map((itemTake,index)=>{
-                return <PictureList deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
-                  // <div style={{display:"inline-block", margin:2}}>
-                  //   <p>Take : {index+1}</p>
-                  //   <div style={{position:'relative',width:200, height:190}}>
-                  //     <img src={itemTake.img} ref={imgRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
-                  //     <canvas ref={canvasScreenShootRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
-                  //   </div>
-                  //   <p>Score Pose Detection : {itemTake.pose && itemTake.pose.length>0 ? JSON.stringify(itemTake.pose[0].score): "-"}</p>
-                  //   <p>Siku Kiri : {Math.round(itemTake.sudutSikuKiri)}</p>
-                  //   <p>Siku Kanan : {Math.round(itemTake.sudutSikuKanan)}</p>
-                  // </div>
-                
-              })
-            }
-            
-            {false && <Table size="small">
+            {<Table size="small">
               <TableHead>
                 <TableRow>
                   <TableCell>No</TableCell>
@@ -443,7 +378,7 @@ function App() {
               </TableHead>
               <TableBody>
                 {
-                 dataPoseScreenShoot && dataPoseScreenShoot.length>0 && dataPoseScreenShoot[0]?.keypoints.map((itemPose,index)=>{
+                 dataPose && dataPose.length>0 && dataPose[0]?.keypoints.map((itemPose,index)=>{
                     return(
                       <TableRow>
                         <TableCell>{index+1}</TableCell>
@@ -458,6 +393,29 @@ function App() {
                 }
               </TableBody>
             </Table>}
+          </Grid>
+        </Grid>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={12} md={12}>
+          {/* <img src={imageScreenShoot} style={{position:'absolute', width:200, height:190, zIndex:10}} /> */}
+            {
+              takeList.map((itemTake,index)=>{
+                return <PictureList deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current.video} data={itemTake} index={index}/>
+                  // <div style={{display:"inline-block", margin:2}}>
+                  //   <p>Take : {index+1}</p>
+                  //   <div style={{position:'relative',width:200, height:190}}>
+                  //     <img src={itemTake.img} ref={imgRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
+                  //     <canvas ref={canvasScreenShootRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
+                  //   </div>
+                  //   <p>Score Pose Detection : {itemTake.pose && itemTake.pose.length>0 ? JSON.stringify(itemTake.pose[0].score): "-"}</p>
+                  //   <p>Siku Kiri : {Math.round(itemTake.sudutSikuKiri)}</p>
+                  //   <p>Siku Kanan : {Math.round(itemTake.sudutSikuKanan)}</p>
+                  // </div>
+                
+              })
+            }
+            
+            
           </Grid>
 
         </Grid>
