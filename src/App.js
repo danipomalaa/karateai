@@ -359,30 +359,16 @@ function App() {
                 let _dataPose = dataPose
                 setDataPoseScreenShoot(dataPose)
 
-                let sudutSikuKiri = 0;                
-                let sudutSikuKanan = 0;
-                if(_dataPose[0].keypoints[11].score >0.9 && _dataPose[0].keypoints[13].score >0.9 && _dataPose[0].keypoints[15].score >0.9)
-                {
-                  sudutSikuKiri = calculateAgle(_dataPose[0].keypoints[11],_dataPose[0].keypoints[13],_dataPose[0].keypoints[15])
-                  setAngleSikuKiriScreenShoot(sudutSikuKiri)
-                }
-
-                if(_dataPose[0].keypoints[12].score >0.9 && _dataPose[0].keypoints[14].score >0.9 && _dataPose[0].keypoints[16].score >0.9)
-                {
-                  sudutSikuKanan = calculateAgle(_dataPose[0].keypoints[12],_dataPose[0].keypoints[14],_dataPose[0].keypoints[16])
-                  setAngleSikuKananScreenShoot(sudutSikuKanan)
-                }
-
-                let dataTake = {id: makeid(10), img: dataURI, sudutSikuKiri, sudutSikuKanan, pose : _dataPose}
+                let dataTake = {id: makeid(10), img: dataURI, pose : _dataPose}
                 let dataConcat = [...takeList, dataTake]
 
-                let poseField = {}
-                _dataPose[0].keypoints.forEach(itemkey=>{
-                  poseField[itemkey.name+"_x"] = itemkey.x.toFixed(0)
-                  poseField[itemkey.name+"_y"] = itemkey.y.toFixed(0)
-                  poseField[itemkey.name+"_z"] = itemkey.z.toFixed(0)
-                  poseField[itemkey.name+"_score"] = (itemkey.score*100).toFixed(2)  
-                })
+                 let poseField = {}
+                // _dataPose[0].keypoints.forEach(itemkey=>{
+                //   poseField[itemkey.name+"_x"] = itemkey.x.toFixed(0)
+                //   poseField[itemkey.name+"_y"] = itemkey.y.toFixed(0)
+                //   poseField[itemkey.name+"_z"] = itemkey.z.toFixed(0)
+                //   poseField[itemkey.name+"_score"] = (itemkey.score*100).toFixed(2)  
+                // })
                 let dataItem = Object.assign({}, {id:dataTake.id,label:""},poseField)
                 setExcelExport([...excelExport, dataItem])
 
