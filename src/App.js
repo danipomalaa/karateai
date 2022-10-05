@@ -242,6 +242,7 @@ function App() {
 
   const [excelExport, setExcelExport] = useState([])
   const [chooseVideo, setChooseVideo] = useState("1")
+  const [displayImage, setDisplayImage] = useState(true)
 
 
   return (
@@ -268,6 +269,7 @@ function App() {
                     chooseVideo === "4" ? videokata2side :
                     videokata1}
                   screenshotFormat="image/jpeg"
+                  controls
                   style={{
                     // border:"1px solid #000",
                     position:'absolute',
@@ -275,7 +277,7 @@ function App() {
                     top:0, left:0,
                     // marginLeft:'auto',
                     // marginRight:'auto',
-                    zIndex:9,
+                    zIndex:10,
                     textAlign:'center'
                   }}
                 />
@@ -312,14 +314,14 @@ function App() {
                 }}
                 />
               </div>
-              <p>Score Pose Detection : {dataPose && dataPose.length>0 ? JSON.stringify(dataPose[0].score): "-"}</p>
-              <p>Siku Kiri : {Math.round(angleSikuKiri)} &nbsp;&nbsp; Siku Kanan : {Math.round(angleSikuKanan)}</p>
+              {/* <p>Score Pose Detection : {dataPose && dataPose.length>0 ? JSON.stringify(dataPose[0].score): "-"}</p>
+              <p>Siku Kiri : {Math.round(angleSikuKiri)} &nbsp;&nbsp; Siku Kanan : {Math.round(angleSikuKanan)}</p> */}
               {
                 !playStatus ? 
                 <Button variant="contained" color="primary" onClick={()=>{
                   const video = webcamRef.current;
                   video.playbackRate = 0.5
-                  runPose()
+                  // runPose()
                   video.play()
                   setPlayStatus(true)
                 }}>Play</Button>
@@ -389,6 +391,10 @@ function App() {
                 
               }}>Take Screenshot</Button>
 
+              <Button variant="contained" color="secondary" style={{marginRight:5}} onClick={()=>{
+                setDisplayImage(!displayImage)
+              }}>{displayImage ? "Display Skeleton": "Display Image"}</Button>
+
 
               <Button variant="contained" color="secondary" style={{marginRight:5}} onClick={()=>{
                 downloadFile({
@@ -415,17 +421,8 @@ function App() {
           {/* <img src={imageScreenShoot} style={{position:'absolute', width:200, height:190, zIndex:10}} /> */}
             {
               takeList.map((itemTake,index)=>{
-                return <PictureList deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
-                  // <div style={{display:"inline-block", margin:2}}>
-                  //   <p>Take : {index+1}</p>
-                  //   <div style={{position:'relative',width:200, height:190}}>
-                  //     <img src={itemTake.img} ref={imgRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
-                  //     <canvas ref={canvasScreenShootRef[index]} style={{position:'absolute', width:200, height:190, zIndex:10}} />
-                  //   </div>
-                  //   <p>Score Pose Detection : {itemTake.pose && itemTake.pose.length>0 ? JSON.stringify(itemTake.pose[0].score): "-"}</p>
-                  //   <p>Siku Kiri : {Math.round(itemTake.sudutSikuKiri)}</p>
-                  //   <p>Siku Kanan : {Math.round(itemTake.sudutSikuKanan)}</p>
-                  // </div>
+                return <PictureList displayImage={displayImage} deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
+                  
                 
               })
             }

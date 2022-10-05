@@ -12,27 +12,41 @@ export default function PictureList(props) {
     // console.log('video width', props.video.videoWidth)
     // console.log('video height', props.video.videoHeight)
 
-    const poseDetect = (pose)=>{
-        
-        canvasScreenShootRef.current.width = props.video.videoWidth
-        canvasScreenShootRef.current.height = props.video.videoHeight
+    const detectPose = async ()=>{
+        alert('Detect Pose')
+        const model = posedetection.SupportedModels.BlazePose;
+        const detectorConfig = {
+        runtime: 'tfjs',
+        enableSmoothing: true,
+        modelType: 'full'
+        };
+        const detector = await posedetection.createDetector(model, detectorConfig)
+        console.log('poses detector', detector)
+        console.log('poses imgRef', imgRef)
+        console.log('poses canvasScreenShootRef', canvasScreenShootRef)
 
-        imgRef.current.width = props.video.videoWidth
-        imgRef.current.height = props.video.videoWidth
+        const poses = await detector.estimatePoses(imgRef.current,{maxPoses: 1, flipHorizontal: false});
+        console.log('poses', poses)
 
-        const ctx = canvasScreenShootRef.current.getContext("2d")
-        console.log('pose data', pose)
-        // drawKeypoints(pose?.keypoints, ctx);
-        // drawSkeleton(pose?.keypoints, pose?.id, ctx);
+        runCalculateAngle(poses[0])
 
-        ctx.arc(10, 10, 1, 0, 2 * Math.PI);
-        ctx.strokeStyle = "red"
-        ctx.stroke();
+        const videoWidth = imgRef.current.width
+        const videoHeight = imgRef.current.height
 
-        ctx.arc(15, 15, 1, 0, 2 * Math.PI);
-        ctx.strokeStyle = "red"
-        ctx.stroke();
-    }
+        imgRef.current.width = videoWidth
+        imgRef.current.height= videoHeight
+
+        canvasScreenShootRef.current.width = videoWidth
+        canvasScreenShootRef.current.height = videoHeight
+
+        for (const pose of poses) {
+            if (pose.keypoints != null) {
+                const ctx = canvasScreenShootRef.current.getContext("2d")
+                drawKeypoints(pose.keypoints, ctx);
+                drawSkeleton(pose.keypoints, pose.id, ctx);
+            }
+        }
+      }
 
     function drawKeypoints(keypoints, ctx) {
         // const ctx = canvasRef.current.getContext("2d")
@@ -68,7 +82,7 @@ export default function PictureList(props) {
         // const ctx = canvasRef.current.getContext("2d")
         if (score >= scoreThreshold) {
           const circle = new Path2D();
-          circle.arc(keypoint.x, keypoint.y, 1, 0, 2 * Math.PI);
+          circle.arc(keypoint.x, keypoint.y, 2, 0, 2 * Math.PI);
           ctx.fill(circle);
           ctx.stroke(circle);
         }
@@ -88,7 +102,7 @@ export default function PictureList(props) {
             COLOR_PALETTE[poseId % 20] : 'white';
         ctx.fillStyle = color;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 5;
     
         posedetection.util.getAdjacentPairs(posedetection.SupportedModels.BlazePose).forEach(([i, j]) => {
           const kp1 = keypoints[i];
@@ -108,22 +122,18 @@ export default function PictureList(props) {
         });
     }
 
-    const runCalculateAngle = async()=>{
-        console.log('sudutSiku', props.data.pose[0])
-        console.log('sudutSiku11', props.data.pose[0].keypoints[11].score)
-        console.log('sudutSiku13', props.data.pose[0].keypoints[13].score)
-        console.log('sudutSiku15', props.data.pose[0].keypoints[15].score)
-        if(props.data.pose[0].keypoints[11].score >0.6 && props.data.pose[0].keypoints[13].score >0.6 && props.data.pose[0].keypoints[15].score >0.6)
+    const runCalculateAngle = async(pose)=>{
+        if(pose.keypoints[11].score >0.6 && pose.keypoints[13].score >0.6 && pose.keypoints[15].score >0.6)
         {
             console.log('sudutSikuKiriInit')
-            let sudutSikuKiri = await calculateAgle(props.data.pose[0].keypoints[11],props.data.pose[0].keypoints[13],props.data.pose[0].keypoints[15])
+            let sudutSikuKiri = await calculateAgle(pose.keypoints[11],pose.keypoints[13],pose.keypoints[15])
             console.log('sudutSikuKiriResult', sudutSikuKiri)
             setSudutSikuKiri(sudutSikuKiri)
         }
 
-        if(props.data.pose[0].keypoints[12].score >0.6 && props.data.pose[0].keypoints[14].score >0.6 && props.data.pose[0].keypoints[16].score >0.6)
+        if(pose.keypoints[12].score >0.6 && pose.keypoints[14].score >0.6 && pose.keypoints[16].score >0.6)
         {
-            let sudutSikuKanan = await calculateAgle(props.data.pose[0].keypoints[12],props.data.pose[0].keypoints[14],props.data.pose[0].keypoints[16])
+            let sudutSikuKanan = await calculateAgle(pose.keypoints[12],pose.keypoints[14],pose.keypoints[16])
             console.log('sudutSikuKanan', sudutSikuKanan)
             setSudutSikuKanan(sudutSikuKanan)
         }
@@ -154,16 +164,27 @@ export default function PictureList(props) {
         <div style={{display:"inline-block", margin:2}}>
             <p>Take : {props.index+1}</p>
             <TextField value={props.label} onChange={props.change} placeholder="Masukan Nama Label" />
-            <div style={{position:'relative',width:200, height:130}}>
-                <img src={props.data.img} ref={imgRef} style={{position:'absolute', width:200, height:130, zIndex:10}} />
-                <canvas ref={canvasScreenShootRef} style={{position:'absolute', width:200, height:130, zIndex:10}} />
+            <div style={{position:'relative',width:360, height:250}}>
+                {
+                    props.displayImage ? 
+                    <>
+                        <img src={props.data.img} ref={imgRef} style={{position:'absolute', width:360, height:250, zIndex:9}} />
+                        <canvas ref={canvasScreenShootRef} style={{position:'absolute', width:360, height:250, zIndex:11}} />
+                    </>:
+                    <>
+                        <img src={props.data.img} ref={imgRef} style={{position:'absolute', display:'none', width:360, height:250, zIndex:9}} />
+                        <canvas ref={canvasScreenShootRef} style={{position:'absolute', width:360, backgroundColor:'black', height:250, zIndex:11}} />
+                    </>
+                }
+                
             </div>
             <p>Score Pose Detection : {props.data.pose && props.data.pose.length>0 ? Math.floor((props.data.pose[0].score)*100): "-"}</p>
             <p>Siku Kiri : {Math.round(sudutSikuKiri)}</p>
             <p>Siku Kanan : {Math.round(sudutSikuKanan)}</p>
             <Button variant="contained" color="primary" tooltip={JSON.stringify(props.data.pose)} onClick={()=>{
-                poseDetect(props.data.pose)
-                runCalculateAngle()
+                // poseDetect(props.data.pose)
+                // runCalculateAngle()
+                detectPose()
             }} >Pose Detect</Button>
             <Button variant="contained" color="secondary" onClick={props.deletedata} >Hapus</Button>
         </div>
