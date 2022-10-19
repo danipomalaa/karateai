@@ -4,7 +4,7 @@ import './App.css';
 import * as facemesh from '@tensorflow-models/facemesh'
 import * as posedetection from '@tensorflow-models/pose-detection';
 import Webcam from 'react-webcam';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import * as tf from '@tensorflow/tfjs-core';
 // Register WebGL backend.
 import '@tensorflow/tfjs-backend-webgl';
@@ -16,6 +16,7 @@ import videokata2 from './video/kata2.mp4'
 import videokata2side from './video/kata2side.mp4'
 import {downloadFile} from './utils/downloadFile'
 import { CSVLink } from "react-csv"
+import { PoseContext } from "./Context/index"
 
 function App() {
 
@@ -23,6 +24,8 @@ function App() {
   const canvasRef = useRef(null)
   const canvasSnapRef = useRef(null)
   const imgRef = useRef([])
+
+  const { dataPoses, excelExport, addPose, deletePose } = useContext(PoseContext)
   
   const [dataPose, setDataPose] = useState([])
   const [angleSikuKiri, setAngleSikuKiri] = useState(0)
@@ -219,31 +222,19 @@ function App() {
         return item
       }
     })
-    const changeDataExport = excelExport.map(item=>{
-      if(id === item.id){
-        return {...item, label: e.target.value}
-      }
-      else{
-        return item
-      }
-    })
     setTakeList(changeData)
-    setExcelExport(changeDataExport)
   }
 
   const [playStatus, setPlayStatus] = useState(null)
 
   const deletedata = (id)=>{
     const changeData = takeList.filter(x=>x.id !== id)
-    const changeDataExport = excelExport.filter(x=>x.id !== id)
+    deletePose(id)
     setTakeList(changeData)
-    setExcelExport(changeDataExport)
   }
 
-  const [excelExport, setExcelExport] = useState([])
   const [chooseVideo, setChooseVideo] = useState("1")
   const [displayImage, setDisplayImage] = useState(true)
-
 
   return (
     <div>
@@ -335,8 +326,6 @@ function App() {
               }
 
               <Button variant="contained" color="primary" style={{marginLeft:5, marginRight:5}} onClick={()=>{
-                // const imageSrc = webcamRef.current.getScreenshot();
-                // console.log('imagesrc', imageSrc)
 
                 const video = webcamRef.current
                 const videoWidth = video.videoWidth
@@ -356,21 +345,13 @@ function App() {
 
                 setImageScreenShoot(dataURI)
                 
-                let _dataPose = dataPose
-                setDataPoseScreenShoot(dataPose)
+                // let _dataPose = dataPose
+                // setDataPoseScreenShoot(dataPose)
 
-                let dataTake = {id: makeid(10), img: dataURI, pose : _dataPose}
+                let dataTake = {id: makeid(10), img: dataURI}
                 let dataConcat = [...takeList, dataTake]
 
-                 let poseField = {}
-                // _dataPose[0].keypoints.forEach(itemkey=>{
-                //   poseField[itemkey.name+"_x"] = itemkey.x.toFixed(0)
-                //   poseField[itemkey.name+"_y"] = itemkey.y.toFixed(0)
-                //   poseField[itemkey.name+"_z"] = itemkey.z.toFixed(0)
-                //   poseField[itemkey.name+"_score"] = (itemkey.score*100).toFixed(2)  
-                // })
-                let dataItem = Object.assign({}, {id:dataTake.id,label:""},poseField)
-                setExcelExport([...excelExport, dataItem])
+                 
 
                 setTakeList(dataConcat)
                 
@@ -384,19 +365,29 @@ function App() {
 
               <Button variant="contained" color="secondary" style={{marginRight:5}} onClick={()=>{
                 downloadFile({
-                  data: JSON.stringify(takeList),
+                  data: JSON.stringify(dataPoses.map(x=>{return({id:x.id,name:x?.name, pose:x.pose.keypoints3D.map(p=>{return({name:p.name, x:(p.x*1000).toFixed(0), y:(-1*p.y*1000).toFixed(0), z:(-1*p.z*1000).toFixed(0), score:(p.score*100).toFixed(0)})})})})),
                   fileName: 'dataset.json',
                   fileType: 'text/json',
                 })
               }}>
                 Export to JSON
               </Button>
+              {/* <ExcelFile element={<Button variant="contained" color="primary" style={{marginRight:5}}>Download Data</Button>}>
+                <ExcelSheet data={excelExport} name="karatepose">
+                    <ExcelColumn label="Nama" value="full_name"/>
+                    <ExcelColumn label="Jenis Kelamin" value="gender"/>
+                    <ExcelColumn label="Tgl Lahir" value="dob"/>
+                    <ExcelColumn label="Kategori 1" value="kategori1"/>
+                    <ExcelColumn label="Kategori 2" value="kategori2"/>
+                    <ExcelColumn label="Kategori 3" value="kategori3"/>
+                </ExcelSheet>
+              </ExcelFile> */}
               <CSVLink data={excelExport} filename={`karatepose.csv`} separator=";">
                 <Button variant="contained" color="success"style={{marginRight:5}}>
                     Export to csv
                 </Button>
               </CSVLink>
-              <Button variant="contained" color="secondary" onClick={()=>{setImageScreenShoot("");setTakeList([]); setExcelExport([])}}>Reset</Button>
+              <Button variant="contained" color="secondary" onClick={()=>{setImageScreenShoot("");setTakeList([]); }}>Reset</Button>
                   
             </center>
             
@@ -408,8 +399,6 @@ function App() {
             {
               takeList.map((itemTake,index)=>{
                 return <PictureList displayImage={displayImage} deletedata={()=>deletedata(itemTake.id)} change={e=>changeData(e, itemTake.id)} label={itemTake.label} video={webcamRef.current} data={itemTake} index={index}/>
-                  
-                
               })
             }
             

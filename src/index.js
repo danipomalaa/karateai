@@ -3,12 +3,17 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import MultiProvider from "./Config/MultiProvider"
+import Provider from "./Context"
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+  
+  <MultiProvider providers={[<Provider.PoseProvider key={1} />]}>
+    <React.StrictMode>
+     <App />
+    </React.StrictMode>
+  </MultiProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
