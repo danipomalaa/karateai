@@ -5,7 +5,7 @@ export const PoseContext = createContext({});
 export default function ProfileProvider(props) {
   const [dataPoses, setDataPoses] = useState([]);
   const [excelExport, setExcelExport] = useState([]);
-
+  
   const addPose = async(pose)=>{
     setDataPoses([...dataPoses, pose])
 

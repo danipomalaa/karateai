@@ -8,10 +8,14 @@ import { PoseContext } from "./Context/index"
 export default function PictureList(props) {
 
   const { dataPoses, addPose, deletePose } = useContext(PoseContext)
+  const [dataPosePicture3D, setDataPosePicture3D] = useState([])
   const [dataPosePicture, setDataPosePicture] = useState([])
 
     const [sudutSikuKiri, setSudutSikuKiri] = useState(0)
     const [sudutSikuKanan, setSudutSikuKanan] = useState(0)
+    const [sudutKakiKiri, setSudutKakiKiri] = useState(0)
+    const [sudutKakiKanan, setSudutKakiKanan] = useState(0)
+    const [orientasiPose, setOrientasiPose] = useState(0)
     const imgRef = useRef()
     const canvasScreenShootRef = useRef()
     const scatter_gl = useRef()
@@ -48,9 +52,11 @@ export default function PictureList(props) {
 
         const poses = await detector.estimatePoses(imgRef.current,{maxPoses: 1, flipHorizontal: false});
         console.log('poses', poses)
-        let dataTake = {id: props.data.id, img: props.data.img, pose : poses[0]}
+        let dataTake = {id: props.data.id, index: props.index, img: props.data.img, pose : poses[0]}
 
         runCalculateAngle(poses[0])
+
+        
         const videoWidth = imgRef.current.width
         const videoHeight = imgRef.current.height
 
@@ -66,12 +72,13 @@ export default function PictureList(props) {
                 const ctx = canvasScreenShootRef.current.getContext("2d")
                 drawKeypoints(pose.keypoints, ctx);
                 drawSkeleton(pose.keypoints, pose.id, ctx);
-                
+                setDataPosePicture(pose.keypoints)
             }
             if (pose.keypoints3D != null) {
                 detect_scatter(pose.keypoints3D)
-                setDataPosePicture(pose.keypoints3D)
+                setDataPosePicture3D(pose.keypoints3D)
             }
+            
         }
 
        addPose(dataTake)
@@ -80,22 +87,30 @@ export default function PictureList(props) {
     }
 
     const [scatterGLHasInitialized, setScatterGLHasInitialized] = useState(false)
+    const [scatterGLState, setScatterGLState] = useState(null)
 
     const detect_scatter = async(keypoints)=>{
         const videoWidth = imgRef.current.width
         const videoHeight = imgRef.current.height
-        let scatterGL = new scatter.ScatterGL(scatter_gl.current, {
-            'rotateOnStart': true,
-            'selectEnabled': true,
-            'styles': {polyline: {defaultOpacity: 1, deselectedOpacity: 1}}
-          });
-        setScatterGLHasInitialized(false)
-        scatter_gl.current.style =
-            `width: ${videoWidth}px; height: ${videoHeight}px;`;
-        scatterGL.resize();
-
-        scatter_gl.current.style.display = 'inline-block'
-        drawKeypoints3D(keypoints, scatterGL)
+        console.log('setScatterGLHasInitialized', scatterGLHasInitialized)
+        let _scatterGL = null
+        if(!scatterGLHasInitialized)
+        {
+            _scatterGL = new scatter.ScatterGL(scatter_gl.current, {
+                'rotateOnStart': true,
+                'selectEnabled': true,
+                'styles': {polyline: {defaultOpacity: 1, deselectedOpacity: 1}}
+              })
+            setScatterGLState(_scatterGL)
+            scatter_gl.current.style = `width: ${videoWidth}px; height: ${videoHeight}px;`;
+            _scatterGL.resize();
+            scatter_gl.current.style.display = 'inline-block'
+        }
+        else{
+            _scatterGL = scatterGLState
+        }
+        
+        drawKeypoints3D(keypoints, _scatterGL)
         //drawSkatter(scatterGL)
 
     }
@@ -123,11 +138,12 @@ export default function PictureList(props) {
             return '#ffa500' /* Orange */;
           }
         });
-    
         if (scatterGLHasInitialized) {
-          scatterGL.render(dataset);
+            console.log('update scatter')
+            scatterGL.updateDataset(dataset);
         } else {
-          scatterGL.updateDataset(dataset);
+            console.log('new scatter')
+            scatterGL.render(dataset);
         }
         const connections = posedetection.util.getAdjacentPairs(posedetection.SupportedModels.BlazePose);
         console.log('connections', connections)
@@ -212,36 +228,110 @@ export default function PictureList(props) {
 
     const runCalculateAngle = async(pose)=>{
         if(pose.keypoints[11].score >0.6 && pose.keypoints[13].score >0.6 && pose.keypoints[15].score >0.6)
-        {
+         {
             console.log('sudutSikuKiriInit')
             let sudutSikuKiri = await calculateAgle(pose.keypoints[11],pose.keypoints[13],pose.keypoints[15])
             console.log('sudutSikuKiriResult', sudutSikuKiri)
-            setSudutSikuKiri(sudutSikuKiri)
+            setSudutSikuKiri(sudutSikuKiri.sudut)
         }
 
-        if(pose.keypoints[12].score >0.6 && pose.keypoints[14].score >0.6 && pose.keypoints[16].score >0.6)
-        {
+         if(pose.keypoints[12].score >0.6 && pose.keypoints[14].score >0.6 && pose.keypoints[16].score >0.6)
+         {
             let sudutSikuKanan = await calculateAgle(pose.keypoints[12],pose.keypoints[14],pose.keypoints[16])
             console.log('sudutSikuKanan', sudutSikuKanan)
-            setSudutSikuKanan(sudutSikuKanan)
+            setSudutSikuKanan(sudutSikuKanan.sudut)
+         }
+
+
+         if(pose.keypoints[24].score >0.6 && pose.keypoints[26].score >0.6 && pose.keypoints[28].score >0.6)
+         {
+            console.log('sudutKakiKiriInit')
+            let sudutKakiKiri = await calculateAgle(pose.keypoints[24],pose.keypoints[26],pose.keypoints[28])
+            console.log('sudutKakiKiriResult', sudutKakiKiri)
+            setSudutKakiKiri(sudutKakiKiri.sudut)
         }
+
+        if(pose.keypoints[23].score >0.6 && pose.keypoints[25].score >0.6 && pose.keypoints[27].score >0.6)
+        {
+            let sudutKakiKanan = await calculateAgle(pose.keypoints[23],pose.keypoints[25],pose.keypoints[27])
+            console.log('sudutKakiKanan', sudutKakiKanan)
+            setSudutKakiKanan(sudutKakiKanan.sudut)
+        }
+
+        
+        console.log('orientation cek', dataPoses)
+        if(props.index>0){
+            let pose1 = {
+                keypoint1 : pose.keypoints3D[23],
+                keypoint2 : pose.keypoints3D[24]
+            }
+            let pose2 = {
+                keypoint1 : dataPoses[props.index-1]?.pose?.keypoints3D[23],
+                keypoint2 : dataPoses[props.index-1]?.pose?.keypoints3D[24]
+            }
+            let orientation  = calculateOrientation(pose1,pose2)
+            console.log('orientation', orientation)
+            setOrientasiPose(orientation)
+        }
+            
+        
+        
     }
 
     const calculateAgle = (keypoint1, keypoint2, keypoint3)=>{
         console.log('sudutKeypoint1', keypoint1)
         console.log('sudutKeypoint2', keypoint2)
         console.log('sudutKeypoint3', keypoint3)
-        let x1 = keypoint1.x;let x2 = keypoint2?.x;let x3 = keypoint3?.x
-        let y1 = keypoint1?.y;let y2 = keypoint2?.y;let y3 = keypoint3?.y
+        let x1 = Math.round(keypoint1.x);let x2 = Math.round(keypoint2?.x);let x3 = Math.round(keypoint3?.x)
+        let y1 = Math.round(keypoint1?.y);let y2 = Math.round(keypoint2?.y);let y3 = Math.round(keypoint3?.y)
         
         let x12 = Math.pow((x1-x2),2);let y12 = Math.pow((y1-y2),2)
         let x32 = Math.pow((x3-x2),2); let y32 = Math.pow((y3-y2),2)
         
         let p1 = Math.sqrt(x12 + y12);
-        let sudut1 = Math.asin((y1-y2)/p1)*180/Math.PI
+        let sudut1 = 0;
+        if(y1<y2){
+            sudut1 = Math.asin((y2-y1)/p1)*180/Math.PI
+        }
+        else{
+            sudut1 = Math.asin((y1-y2)/p1)*180/Math.PI
+        }
+        
+        if((x1<x2)){
+            sudut1 = Math.asin((x2-x1)/p1)*180/Math.PI + 90
+        }
     
         let p2 = Math.sqrt(x32 + y32)
-        let sudut2 = Math.asin((y2-y3)/p2)*180/Math.PI
+        let sudut2 = 0;
+        if(y3<y2){
+            sudut2 = Math.asin((y2-y3)/p2)*180/Math.PI
+        }
+        else{
+            sudut2 = Math.asin((y3-y2)/p2)*180/Math.PI
+        }
+
+        if(x3<x2){
+            sudut2 = Math.asin((x2-x3)/p2)*180/Math.PI + 90
+        }
+        
+        let sudut = sudut1+sudut2
+        if(sudut>180){
+            sudut = (sudut - 180)*-1
+        }
+        return {sudut, sudut1, sudut2, p1,p2, x1,x2,x3, y1,y2,y3}
+    }
+
+    const calculateOrientation = (pose1, pose2)=>{
+        let p_pose1 = Math.sqrt(Math.pow(((pose1.keypoint1.x*1000) - (pose1.keypoint2.x*1000)),2) + Math.pow(((-1*pose1.keypoint1.z*1000) - (-1*((pose1.keypoint2.z*1000)))),2)) //sqrt((x1-x2)^2+(z1-z2)^2) 
+        let p_center1 = p_pose1 / 2 // Pose 1 poin center
+        let z1 = ((-1*pose1.keypoint1.z*1000) - (-1*((pose1.keypoint2.z*1000))))/2
+
+        let p_pose2 = Math.sqrt(Math.pow(((pose2.keypoint1.x*1000) - (pose2.keypoint2.x*1000)),2) + Math.pow(((-1*pose2.keypoint1.z*1000) - (-1*((pose2.keypoint2.z*1000)))),2)) //sqrt((x1-x2)^2+(z1-z2)^2) 
+        let p_center2 = p_pose2 / 2 // Pose 1 poin center
+        let z2 = ((-1*pose2.keypoint1.z*1000) - (-1*pose2.keypoint2.z*1000))/2
+
+        let sudut1 = Math.asin((z1)/p_center1)*180/Math.PI
+        let sudut2 = Math.asin((z2)/p_center2)*180/Math.PI
     
         let sudut = sudut1+sudut2
         return sudut
@@ -266,8 +356,9 @@ export default function PictureList(props) {
                 
             </div>
             <p>Score Pose Detection : {props.data.pose && props.data.pose.length>0 ? Math.floor((props.data.pose[0].score)*100): "-"}</p>
-            <p>Siku Kiri : {Math.round(sudutSikuKiri)}</p>
-            <p>Siku Kanan : {Math.round(sudutSikuKanan)}</p>
+            <p>Siku ... Kiri : {Math.round(sudutSikuKiri)} &nbsp; - Kanan : {Math.round(sudutSikuKanan)}</p>
+            <p>Kaki ... Kiri : {Math.round(sudutKakiKiri)} &nbsp; - Kanan : {Math.round(sudutKakiKanan)}</p>
+            <p>Rotasi Badan : {Math.round(orientasiPose)}</p>
             <Button variant="contained" color="primary" tooltip={JSON.stringify(props.data.pose)} onClick={()=>{
                 detectPose()
             }} >Pose Detect</Button>
@@ -277,15 +368,70 @@ export default function PictureList(props) {
                 <div ref={scatter_gl}></div>
             </div>
             <div>
-                <Table>
-                    <TableRow>
+                <Table style={{marginBottom:5}}>
+                    <TableRow style={{backgroundColor:"#CFCFCF"}}>
                         <TableCell>Name</TableCell>
                         <TableCell>x</TableCell>
                         <TableCell>y</TableCell>
+                    </TableRow>
+                    <TableRow></TableRow>
+                    {
+                        dataPosePicture.map((item,index)=>{
+                            let display = false
+                            if(index === 11 || index === 13 || index === 15){
+                                display = true
+                            }
+                            return(
+                                <>
+                                    {display ? 
+                                    <TableRow>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell>{(item.x ).toFixed(0)}</TableCell>
+                                        <TableCell>{(item.y*-1).toFixed(0)}</TableCell>
+                                    </TableRow>: null
+                                }
+                                </>
+                                
+                            )
+                        })
+                    }
+                </Table>
+                <Table style={{marginBottom:5}}>
+                    <TableRow style={{backgroundColor:"#CFCFCF"}}>
+                        <TableCell>Name</TableCell>
+                        <TableCell>x</TableCell>
+                        <TableCell>y</TableCell>
+                    </TableRow>
+                    <TableRow></TableRow>
+                    {
+                        dataPosePicture.map((item,index)=>{
+                            let display = false
+                            if(index === 12 || index === 14 || index === 16){
+                                display = true
+                            }
+                            return(
+                                <>
+                                    {display ? 
+                                    <TableRow>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell>{(item.x ).toFixed(0)}</TableCell>
+                                        <TableCell>{(item.y*-1).toFixed(0)}</TableCell>
+                                    </TableRow>: null
+                                }
+                                </>
+                                
+                            )
+                        })
+                    }
+                </Table>
+                <Table>
+                    <TableRow style={{backgroundColor:"#CFCFCF"}}>
+                        <TableCell>Name</TableCell>
+                        <TableCell>x</TableCell>
                         <TableCell>z</TableCell>
                     </TableRow>
                     {
-                        dataPosePicture.map((item,index)=>{
+                        dataPosePicture3D.map((item,index)=>{
                             let display = false
                             if(index === 11 || index === 12 || index === 23 || index === 24){
                                 display = true
@@ -296,7 +442,6 @@ export default function PictureList(props) {
                                     <TableRow>
                                         <TableCell>{item.name}</TableCell>
                                         <TableCell>{(item.x * 1000).toFixed(0)}</TableCell>
-                                        <TableCell>{(item.y * 1000 * -1).toFixed(0)}</TableCell>
                                         <TableCell>{(item.z * 1000 * -1).toFixed(0)}</TableCell>
                                     </TableRow>: null
                                 }
