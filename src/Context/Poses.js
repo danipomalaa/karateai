@@ -22,12 +22,29 @@ export default function ProfileProvider(props) {
     setExcelExport([...excelExport, dataItem])
   }
 
+  const changeLabel = async(id, label)=>{
+    const datachange = dataPoses.map(x=>{
+      if(id === x.id){
+        return({
+          ...x, 
+          label
+        })
+      }
+      else{
+        return x
+      }
+      
+    })
+    console.log('datachange', datachange, id, label)
+    setDataPoses(datachange)
+  }
+
   const deletePose = async(id)=>{
     const datachange = dataPoses.filter(x=>x.id !== id)
     setDataPoses(datachange)
   }
 
 return (
-  <PoseContext.Provider value={{ dataPoses, excelExport, addPose, deletePose }} {...props} />
+  <PoseContext.Provider value={{ dataPoses, excelExport, addPose, deletePose, changeLabel }} {...props} />
 );
 }

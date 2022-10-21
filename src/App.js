@@ -365,7 +365,7 @@ function App() {
 
               <Button variant="contained" color="secondary" style={{marginRight:5}} onClick={()=>{
                 downloadFile({
-                  data: JSON.stringify(dataPoses.map(x=>{return({id:x.id,name:x?.name, pose:x.pose.keypoints3D.map(p=>{return({name:p.name, x:(p.x*1000).toFixed(0), y:(-1*p.y*1000).toFixed(0), z:(-1*p.z*1000).toFixed(0), score:(p.score*100).toFixed(0)})})})})),
+                  data: JSON.stringify(dataPoses.map(x=>{return({id:x.id,name:x?.label, pose: x.pose.keypoints, pose3D:x.pose.keypoints3D.map(p=>{return({name:p.name, x:(p.x*1000).toFixed(0), y:(-1*p.y*1000).toFixed(0), z:(-1*p.z*1000).toFixed(0), score:(p.score*100).toFixed(0)})})})})),
                   fileName: 'dataset.json',
                   fileType: 'text/json',
                 })

@@ -7,7 +7,7 @@ import { PoseContext } from "./Context/index"
 
 export default function PictureList(props) {
 
-  const { dataPoses, addPose, deletePose } = useContext(PoseContext)
+  const { dataPoses, addPose, deletePose, changeLabel } = useContext(PoseContext)
   const [dataPosePicture3D, setDataPosePicture3D] = useState([])
   const [dataPosePicture, setDataPosePicture] = useState([])
 
@@ -52,7 +52,7 @@ export default function PictureList(props) {
 
         const poses = await detector.estimatePoses(imgRef.current,{maxPoses: 1, flipHorizontal: false});
         console.log('poses', poses)
-        let dataTake = {id: props.data.id, index: props.index, img: props.data.img, pose : poses[0]}
+        let dataTake = {id: props.data.id, label:props.data.label, index: props.index, img: props.data.img, pose : poses[0]}
 
         runCalculateAngle(poses[0])
 
@@ -75,7 +75,7 @@ export default function PictureList(props) {
                 setDataPosePicture(pose.keypoints)
             }
             if (pose.keypoints3D != null) {
-                detect_scatter(pose.keypoints3D)
+                // detect_scatter(pose.keypoints3D)
                 setDataPosePicture3D(pose.keypoints3D)
             }
             
@@ -273,9 +273,6 @@ export default function PictureList(props) {
             console.log('orientation', orientation)
             setOrientasiPose(orientation)
         }
-            
-        
-        
     }
 
     const calculateAgle = (keypoint1, keypoint2, keypoint3)=>{
@@ -315,9 +312,9 @@ export default function PictureList(props) {
         }
         
         let sudut = sudut1+sudut2
-        if(sudut>180){
-            sudut = (sudut - 180)*-1
-        }
+        // if(sudut>180){
+        //     sudut = (sudut - 180)
+        // }
         return {sudut, sudut1, sudut2, p1,p2, x1,x2,x3, y1,y2,y3}
     }
 
@@ -336,11 +333,17 @@ export default function PictureList(props) {
         let sudut = sudut1+sudut2
         return sudut
     }
+
+    const [labelPose, setLabelPose] = useState("")
+    const changeLabelLocal = (e)=>{
+        setLabelPose(e.target.value)
+        changeLabel(props.data.id, e.target.value)
+    }
     
     return (
         <div style={{display:"inline-block", margin:2}}>
             <p>Take : {props.index+1}</p>
-            <TextField value={props.label} onChange={props.change} placeholder="Masukan Nama Label" />
+            <TextField value={labelPose} onChange={changeLabelLocal} placeholder="Masukan Nama Label" />
             <div style={{position:'relative',width:360, height:250}}>
                 {
                     props.displayImage ? 
@@ -355,9 +358,9 @@ export default function PictureList(props) {
                 }
                 
             </div>
-            <p>Score Pose Detection : {props.data.pose && props.data.pose.length>0 ? Math.floor((props.data.pose[0].score)*100): "-"}</p>
-            <p>Siku ... Kiri : {Math.round(sudutSikuKiri)} &nbsp; - Kanan : {Math.round(sudutSikuKanan)}</p>
-            <p>Kaki ... Kiri : {Math.round(sudutKakiKiri)} &nbsp; - Kanan : {Math.round(sudutKakiKanan)}</p>
+            {/* <p>Score Pose Detection : {props.data.pose && props.data.pose.length>0 ? Math.floor((props.data.pose[0].score)*100): "-"}</p> */}
+            <p>Siku ... Kiri : {Math.round(sudutSikuKiri)} ({Math.round(sudutSikuKiri)-180}) &nbsp; - Kanan : {Math.round(sudutSikuKanan)} ({Math.round(sudutSikuKanan)-180})</p>
+            <p>Kaki ... Kiri : {Math.round(sudutKakiKiri)} ({Math.round(sudutKakiKiri)-180}) &nbsp; - Kanan : {Math.round(sudutKakiKanan)} ({Math.round(sudutKakiKanan)-180})</p>
             <p>Rotasi Badan : {Math.round(orientasiPose)}</p>
             <Button variant="contained" color="primary" tooltip={JSON.stringify(props.data.pose)} onClick={()=>{
                 detectPose()
@@ -367,7 +370,7 @@ export default function PictureList(props) {
             <div style={{border:"1px solid #000"}}>
                 <div ref={scatter_gl}></div>
             </div>
-            <div>
+            <div style={{display:'none'}}>
                 <Table style={{marginBottom:5}}>
                     <TableRow style={{backgroundColor:"#CFCFCF"}}>
                         <TableCell>Name</TableCell>
