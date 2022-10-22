@@ -266,12 +266,12 @@ export default function PictureList(props) {
                 keypoint2 : pose.keypoints3D[24]
             }
             let pose2 = {
-                keypoint1 : dataPoses[props.index-1]?.pose?.keypoints3D[23],
-                keypoint2 : dataPoses[props.index-1]?.pose?.keypoints3D[24]
+                keypoint1 : dataPoses[0]?.pose?.keypoints3D[23],
+                keypoint2 : dataPoses[0]?.pose?.keypoints3D[24]
             }
-            let orientation  = calculateOrientation(pose1,pose2)
+            let orientation  = calculateOrientation(pose2,pose1)
             console.log('orientation', orientation)
-            setOrientasiPose(orientation)
+            setOrientasiPose(orientation.sudut)
         }
     }
 
@@ -319,19 +319,51 @@ export default function PictureList(props) {
     }
 
     const calculateOrientation = (pose1, pose2)=>{
-        let p_pose1 = Math.sqrt(Math.pow(((pose1.keypoint1.x*1000) - (pose1.keypoint2.x*1000)),2) + Math.pow(((-1*pose1.keypoint1.z*1000) - (-1*((pose1.keypoint2.z*1000)))),2)) //sqrt((x1-x2)^2+(z1-z2)^2) 
+        let x1 = (-1* pose1.keypoint1.x*1000)
+        let x2 = (-1 * pose1.keypoint2.x*1000)
+        let z1 = (pose1.keypoint1.z*1000)
+        let z2 = (((pose1.keypoint2.z*1000)))
+
+        let x12_center = 0
+        let z12_center = 0
+        
+        let x3 = (-1* pose2.keypoint1.x*1000)
+        let x4 = (-1* pose2.keypoint2.x*1000)
+        let z3 = (pose2.keypoint1.z*1000)
+        let z4 = (((pose2.keypoint2.z*1000)))
+
+        let x34_center = 0
+        let z34_center = 0
+
+        let p_pose1 = Math.sqrt(Math.pow((x1 - x2),2) + Math.pow((z1 - z2),2)) //sqrt((x1-x2)^2+(z1-z2)^2) 
         let p_center1 = p_pose1 / 2 // Pose 1 poin center
-        let z1 = ((-1*pose1.keypoint1.z*1000) - (-1*((pose1.keypoint2.z*1000))))/2
+        let pz1 = (z1 - z2)/2
 
-        let p_pose2 = Math.sqrt(Math.pow(((pose2.keypoint1.x*1000) - (pose2.keypoint2.x*1000)),2) + Math.pow(((-1*pose2.keypoint1.z*1000) - (-1*((pose2.keypoint2.z*1000)))),2)) //sqrt((x1-x2)^2+(z1-z2)^2) 
-        let p_center2 = p_pose2 / 2 // Pose 1 poin center
-        let z2 = ((-1*pose2.keypoint1.z*1000) - (-1*pose2.keypoint2.z*1000))/2
+        let sudut1 = 0;//
+        if(x3>x12_center ){
+            if(z3<z12_center){
+                sudut1 = 180
+            }
+            else{
+                sudut1 = 90
+            }
+        }
+        // else{
+        //     sudut1 = Math.asin((z12_center)/p_center1)*180/Math.PI
+        // }
 
-        let sudut1 = Math.asin((z1)/p_center1)*180/Math.PI
-        let sudut2 = Math.asin((z2)/p_center2)*180/Math.PI
-    
+
+        let p_pose2 = Math.sqrt(Math.pow((x3 - x4),2) + Math.pow((z3 - z4),2)) //sqrt((x3-x4)^2+(z3-z4)^2) 
+        let p_center2 = p_pose2 / 2 // Pose 2 poin center
+        let pz2 = (z4 - z3)/2
+        
+        let sudut2 = Math.asin((pz2)/p_center2)*180/Math.PI
         let sudut = sudut1+sudut2
-        return sudut
+        if(sudut2<0){
+            sudut = (-1*sudut1)+sudut2
+        }
+        
+        return {sudut, sudut1, sudut2, x1, x2, x3,x4, x12_center, z1, z2, z3, z4, z12_center}
     }
 
     const [labelPose, setLabelPose] = useState("")
